@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from datasets import load_dataset
+# from datasets import load_dataset
 from sentence_transformers import SentenceTransformer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -28,39 +28,87 @@ HEDGE_WORDS = [
 ]
 
 
+# def load_truthfulqa():
+#     """
+#     Load TruthfulQA from HuggingFace datasets.
+#     Returns a list of dicts with 'text' and 'label' keys.
+#     """
+#     print("Loading TruthfulQA dataset...")
+#     # dataset = load_dataset("truthful_qa", "generation", trust_remote_code=True)
+#     dataset = load_dataset("truthfulqa/truthful_qa", "generation")
+    
+#     samples = []
+#     split_name = "validation" if "validation" in dataset else list(dataset.keys())[0]
+#     for item in dataset[split_name]:
+#     # for item in dataset["validation"]:
+#         question = item["question"]
+        
+#         # Correct answers → factual (label 0)
+#         for ans in item["correct_answers"]:
+#             if ans.strip():
+#                 samples.append({
+#                     "text": f"Q: {question} A: {ans}",
+#                     "label": "factual"
+#                 })
+        
+#         # Incorrect answers → hallucinated (label 1)
+#         for ans in item["incorrect_answers"]:
+#             if ans.strip():
+#                 text = f"Q: {question} A: {ans}"
+#                 label = classify_incorrect(ans)
+#                 samples.append({
+#                     "text": text,
+#                     "label": label
+#                 })
+    
+#     print(f"  Loaded {len(samples)} samples from TruthfulQA")
+#     return samples
+
 def load_truthfulqa():
     """
-    Load TruthfulQA from HuggingFace datasets.
-    Returns a list of dicts with 'text' and 'label' keys.
+    Load TruthfulQA directly via HTTP parquet file.
+    No datasets library needed.
     """
-    print("Loading TruthfulQA dataset...")
-    # dataset = load_dataset("truthful_qa", "generation", trust_remote_code=True)
-    dataset = load_dataset("truthfulqa/truthful_qa", "generation")
-    
+    import requests
+    import io
+
+    print("Loading TruthfulQA dataset via HTTP...")
+
+    url = (
+        "https://huggingface.co/datasets/truthfulqa/truthful_qa"
+        "/resolve/main/data/generation/validation-00000-of-00001.parquet"
+    )
+
+    response = requests.get(url, stream=True)
+    response.raise_for_status()
+
+    df_raw = pd.read_parquet(io.BytesIO(response.content))
+    print(f"  Raw dataset shape: {df_raw.shape}")
+
     samples = []
-    split_name = "validation" if "validation" in dataset else list(dataset.keys())[0]
-    for item in dataset[split_name]:
-    # for item in dataset["validation"]:
-        question = item["question"]
-        
-        # Correct answers → factual (label 0)
-        for ans in item["correct_answers"]:
-            if ans.strip():
+    for _, row in df_raw.iterrows():
+        question = row["question"]
+
+        correct = row.get("correct_answers", [])
+        if isinstance(correct, str):
+            correct = [correct]
+        for ans in correct:
+            if str(ans).strip():
                 samples.append({
                     "text": f"Q: {question} A: {ans}",
                     "label": "factual"
                 })
-        
-        # Incorrect answers → hallucinated (label 1)
-        for ans in item["incorrect_answers"]:
-            if ans.strip():
-                text = f"Q: {question} A: {ans}"
-                label = classify_incorrect(ans)
+
+        incorrect = row.get("incorrect_answers", [])
+        if isinstance(incorrect, str):
+            incorrect = [incorrect]
+        for ans in incorrect:
+            if str(ans).strip():
                 samples.append({
-                    "text": text,
-                    "label": label
+                    "text": f"Q: {question} A: {ans}",
+                    "label": classify_incorrect(str(ans))
                 })
-    
+
     print(f"  Loaded {len(samples)} samples from TruthfulQA")
     return samples
 
