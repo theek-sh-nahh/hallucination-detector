@@ -64,22 +64,86 @@ HEDGE_WORDS = [
 #     print(f"  Loaded {len(samples)} samples from TruthfulQA")
 #     return samples
 
+# def load_truthfulqa():
+#     """
+#     Load TruthfulQA directly via HTTP parquet file.
+#     No datasets library needed.
+#     """
+#     import requests
+#     import io
+
+#     print("Loading TruthfulQA dataset via HTTP...")
+
+#     url = (
+#         "https://huggingface.co/datasets/truthfulqa/truthful_qa"
+#         "/resolve/main/data/generation/validation-00000-of-00001.parquet"
+#     )
+
+#     response = requests.get(url, stream=True)
+#     response.raise_for_status()
+
+#     df_raw = pd.read_parquet(io.BytesIO(response.content))
+#     print(f"  Raw dataset shape: {df_raw.shape}")
+
+#     samples = []
+#     for _, row in df_raw.iterrows():
+#         question = row["question"]
+
+#         correct = row.get("correct_answers", [])
+#         if isinstance(correct, str):
+#             correct = [correct]
+#         for ans in correct:
+#             if str(ans).strip():
+#                 samples.append({
+#                     "text": f"Q: {question} A: {ans}",
+#                     "label": "factual"
+#                 })
+
+#         incorrect = row.get("incorrect_answers", [])
+#         if isinstance(incorrect, str):
+#             incorrect = [incorrect]
+#         for ans in incorrect:
+#             if str(ans).strip():
+#                 samples.append({
+#                     "text": f"Q: {question} A: {ans}",
+#                     "label": classify_incorrect(str(ans))
+#                 })
+
+#     print(f"  Loaded {len(samples)} samples from TruthfulQA")
+#     return samples
+
 def load_truthfulqa():
     """
-    Load TruthfulQA directly via HTTP parquet file.
-    No datasets library needed.
+    Load TruthfulQA by querying HuggingFace API for the real parquet URL,
+    then downloading it directly. No datasets library needed.
     """
     import requests
     import io
 
-    print("Loading TruthfulQA dataset via HTTP...")
+    print("Fetching TruthfulQA parquet URL from HuggingFace API...")
 
-    url = (
-        "https://huggingface.co/datasets/truthfulqa/truthful_qa"
-        "/resolve/main/data/generation/validation-00000-of-00001.parquet"
-    )
+    # Step 1: Ask HuggingFace API for the real parquet file URL
+    api_url = "https://datasets-server.huggingface.co/parquet?dataset=truthfulqa/truthful_qa"
+    response = requests.get(api_url, timeout=30)
+    response.raise_for_status()
 
-    response = requests.get(url, stream=True)
+    parquet_files = response.json().get("parquet_files", [])
+
+    # Step 2: Find the generation/validation file
+    target_url = None
+    for f in parquet_files:
+        if f.get("config") == "generation" and f.get("split") == "validation":
+            target_url = f["url"]
+            break
+
+    if not target_url:
+        print("Available files:", [f['config'] + '/' + f['split'] for f in parquet_files])
+        raise ValueError("Could not find generation/validation parquet file.")
+
+    print(f"  Found parquet at: {target_url}")
+
+    # Step 3: Download and read it
+    response = requests.get(target_url, timeout=60)
     response.raise_for_status()
 
     df_raw = pd.read_parquet(io.BytesIO(response.content))
@@ -111,7 +175,6 @@ def load_truthfulqa():
 
     print(f"  Loaded {len(samples)} samples from TruthfulQA")
     return samples
-
 
 def classify_incorrect(answer_text):
     """
