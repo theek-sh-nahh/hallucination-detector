@@ -1,0 +1,12 @@
+torch
+transformers
+sentence-transformers
+datasets
+numpy
+pandas
+scikit-learn
+matplotlib
+seaborn
+gradio
+python-dotenv
+jupyter
