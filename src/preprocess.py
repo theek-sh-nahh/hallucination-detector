@@ -34,10 +34,13 @@ def load_truthfulqa():
     Returns a list of dicts with 'text' and 'label' keys.
     """
     print("Loading TruthfulQA dataset...")
-    dataset = load_dataset("truthful_qa", "generation", trust_remote_code=True)
+    # dataset = load_dataset("truthful_qa", "generation", trust_remote_code=True)
+    dataset = load_dataset("truthfulqa/truthful_qa", "generation")
     
     samples = []
-    for item in dataset["validation"]:
+    split_name = "validation" if "validation" in dataset else list(dataset.keys())[0]
+    for item in dataset[split_name]:
+    # for item in dataset["validation"]:
         question = item["question"]
         
         # Correct answers → factual (label 0)
