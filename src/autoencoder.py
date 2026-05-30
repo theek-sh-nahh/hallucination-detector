@@ -148,7 +148,7 @@ def train_autoencoder(model, ae_loader, config, device, save_path):
         weight_decay=1e-5
     )
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-        optimizer, mode='min', factor=0.5, patience=3, verbose=True
+        optimizer, mode='min', factor=0.5, patience=3
     )
 
     best_loss        = float('inf')

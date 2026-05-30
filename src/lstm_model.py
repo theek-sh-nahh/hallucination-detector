@@ -156,9 +156,14 @@ def train_model(model, train_loader, val_loader, config, device, save_path):
         lr=config["lr"],
         weight_decay=1e-5
     )
+    # scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+    #     optimizer, mode='min', factor=0.5,
+    #     patience=3, verbose=True
+    # )
+
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, mode='min', factor=0.5,
-        patience=3, verbose=True
+        patience=3
     )
 
     best_val_loss = float('inf')
