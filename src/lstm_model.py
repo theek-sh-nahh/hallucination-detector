@@ -14,8 +14,7 @@ class BiLSTMClassifier(nn.Module):
     Bidirectional LSTM classifier for hallucination detection.
 
     Input:  Sentence-BERT embeddings (batch, seq_len=1, embed_dim=384)
-    Output: 4-class probabilities (factual / hallucinated /
-                                   partially_true / overconfident)
+    Output: 3-class probabilities (factual / hallucinated / overconfident)
 
     Why BiLSTM?
     We treat each embedding as a single-step sequence. The BiLSTM
@@ -26,7 +25,7 @@ class BiLSTMClassifier(nn.Module):
     """
 
     def __init__(self, input_dim=384, hidden_dim=128, num_layers=2,
-                 num_classes=4, dropout=0.3):
+                 num_classes=3, dropout=0.3):
         super(BiLSTMClassifier, self).__init__()
 
         self.hidden_dim  = hidden_dim
@@ -65,7 +64,7 @@ class BiLSTMClassifier(nn.Module):
 
 # ── Training Utilities ────────────────────────────────────────────
 
-def get_class_weights(y_train, num_classes=4):
+def get_class_weights(y_train, num_classes=3):
     """
     Compute inverse-frequency class weights to handle class imbalance.
     partially_true has only 13 samples — without this it gets ignored.
@@ -254,7 +253,7 @@ def run_hyperparameter_search(X_train, X_val, y_train, y_val,
             input_dim=384,
             hidden_dim=config["hidden_dim"],
             num_layers=2,
-            num_classes=4,
+            num_classes=3,
             dropout=config["dropout"]
         ).to(device)
 

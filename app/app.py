@@ -16,12 +16,12 @@ from src.fusion import fuse_scores, interpret_result
 
 MODELS_DIR  = os.path.join(os.path.dirname(__file__), '..', 'models')
 DEVICE      = torch.device('cpu')   # app runs on CPU locally
-LABEL_NAMES = ["factual", "hallucinated", "partially_true", "overconfident"]
+LABEL_NAMES = ["factual", "hallucinated", "overconfident"]
 
 LABEL_COLORS = {
     "factual":          "#22c55e",   # green
     "hallucinated":     "#ef4444",   # red
-    "partially_true":   "#f97316",   # orange
+    # "partially_true":   "#f97316",   # orange
     "overconfident":    "#a855f7"    # purple
 }
 
@@ -30,8 +30,8 @@ LABEL_DESCRIPTIONS = {
         "This answer appears to be accurate and well-grounded.",
     "hallucinated":
         "This answer contains fabricated or false information.",
-    "partially_true":
-        "This answer mixes correct and incorrect information.",
+    # "partially_true":
+    #     "This answer mixes correct and incorrect information.",
     "overconfident":
         "This answer states uncertain claims with unwarranted confidence."
 }
@@ -49,7 +49,7 @@ def load_models():
     # BiLSTM
     lstm = BiLSTMClassifier(
         input_dim=384, hidden_dim=128,
-        num_layers=2, num_classes=4, dropout=0.4
+        num_layers=2, num_classes=3, dropout=0.4
     )
     lstm_path = os.path.join(MODELS_DIR, 'lstm', 'lstm_final.pt')
     lstm.load_state_dict(

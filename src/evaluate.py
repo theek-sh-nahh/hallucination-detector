@@ -15,7 +15,8 @@ from src.lstm_model import BiLSTMClassifier, predict as lstm_predict
 from src.autoencoder import HallucinationAutoencoder, eval_ae
 from src.fusion import fuse_scores, interpret_result
 
-LABEL_NAMES = ["factual", "hallucinated", "partially_true", "overconfident"]
+# LABEL_NAMES = ["factual", "hallucinated", "partially_true", "overconfident"]
+LABEL_NAMES = ["factual", "hallucinated", "overconfident"]
 
 
 # ── Load Models ───────────────────────────────────────────────────

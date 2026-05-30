@@ -6,8 +6,8 @@ import os
 LABEL_NAMES = {
     0: "factual",
     1: "hallucinated",
-    2: "partially_true",
-    3: "overconfident"
+    # 2: "partially_true",
+    2: "overconfident"
 }
 
 
@@ -29,7 +29,7 @@ def fuse_scores(lstm_probs, ae_errors,
     """
     Combine BiLSTM class probabilities with AE anomaly scores.
 
-    lstm_probs : (N, 4) softmax probabilities from BiLSTM
+    lstm_probs : (N, 3) softmax probabilities from BiLSTM
     ae_errors  : (N,)   reconstruction errors from Autoencoder
 
     Strategy:
@@ -41,7 +41,7 @@ def fuse_scores(lstm_probs, ae_errors,
     Returns:
     - final_preds   : (N,) predicted class indices
     - halluc_conf   : (N,) hallucination confidence 0-100%
-    - fused_probs   : (N, 4) adjusted probability distribution
+    - fused_probs   : (N, 3) adjusted probability distribution
     """
     ae_scores_norm, ae_min, ae_max = normalize_errors(
         ae_errors, ae_min, ae_max
@@ -61,7 +61,8 @@ def fuse_scores(lstm_probs, ae_errors,
 
     # Hallucination confidence = P(hallucinated) + 0.5*P(overconfident)
     # Overconfident answers are a softer form of hallucination
-    halluc_conf = (fused[:, 1] + 0.5 * fused[:, 3]) * 100
+    # halluc_conf = (fused[:, 1] + 0.5 * fused[:, 3]) * 100
+    halluc_conf = (fused[:, 1] + 0.5 * fused[:, 2]) * 100
 
     return final_preds, halluc_conf, fused, ae_min, ae_max
 

@@ -18,7 +18,7 @@ LABEL_MAP = {
     "factual": 0,
     "hallucinated": 1,
     "partially_true": 2,
-    "overconfident": 3
+    "overconfident": 2
 }
 
 HEDGE_WORDS = [
@@ -219,9 +219,14 @@ def build_dataframe(samples):
     df = pd.DataFrame(samples)
     df = df.drop_duplicates(subset=["text"])
     df = df.dropna(subset=["text", "label"])
+    # df = df[df["label"].isin(LABEL_MAP.keys())]
+    # df["label_id"] = df["label"].map(LABEL_MAP)
     df = df[df["label"].isin(LABEL_MAP.keys())]
-    
     df["label_id"] = df["label"].map(LABEL_MAP)
+
+    # Remap: partially_true and overconfident both → class 2
+    # Final classes: 0=factual, 1=hallucinated, 2=overconfident
+    print("  Merged partially_true into overconfident (class 2)")
     df = df.reset_index(drop=True)
     
     print(f"  DataFrame shape: {df.shape}")
