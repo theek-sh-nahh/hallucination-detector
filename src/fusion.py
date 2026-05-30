@@ -25,7 +25,7 @@ def normalize_errors(errors, min_e=None, max_e=None):
 
 def fuse_scores(lstm_probs, ae_errors,
                 ae_min=None, ae_max=None,
-                lstm_weight=0.6, ae_weight=0.4):
+                lstm_weight=0.75, ae_weight=0.25):
     """
     Combine BiLSTM class probabilities with AE anomaly scores.
 
